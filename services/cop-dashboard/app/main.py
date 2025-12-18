@@ -22,6 +22,9 @@ AUDIT_URL = os.getenv("AUDIT_URL", "http://audit-log:8004")
 
 JWT_SECRET = os.getenv("JWT_SECRET", "dev_super_secret_change_me")
 
+REF_LAT = float(os.getenv("REF_LAT", "29.7604"))
+REF_LON = float(os.getenv("REF_LON", "-95.3698"))
+
 
 RATIONALE_MAP = {
     "closing_rate_gt_threshold": "High closing speed exceeds threshold",
@@ -138,62 +141,60 @@ def _build_scenario_observations(scenario: str) -> list[dict]:
 
 
     if scenario == "benign":
-        # 2 benign contacts (lower altitude, stable)
-        for i in range(1, 3):
-            lat, lon = _random_offset_miles(center_lat, center_lon, max_miles=6.0)
-            observations.append({
-                **base,
-                "observation_id": make_obs_id(),
-                "sensor_type": "RADAR",
-                "object_id": make_id("BENIGN", i),
-                "contact_type": "BENIGN",
-                "label": f"BENIGN-{i:02d}",
-                "sensor_id": "RADAR-01",
-                "modality": "RADAR",
-                "position": {"lat": lat, "lon": lon, "alt_m": 1500.0},
-                "velocity": {"vx_mps": 120.0, "vy_mps": 40.0, "vz_mps": 0.0},
-                "quality": {"confidence": 0.85},
-                "metadata": {"scenario": "benign"}
-            })
+        lat, lon = _random_offset_miles(center_lat, center_lon, max_miles=6.0)
+        i = 1
+        observations.append({
+            **base,
+            "observation_id": make_obs_id(),
+            "sensor_type": "RADAR",
+            "object_id": make_id("BENIGN", i),
+            "contact_type": "BENIGN",
+            "label": f"BENIGN-{random.randint(1, 99):02d}",
+            "sensor_id": "RADAR-01",
+            "modality": "RADAR",
+            "position": {"lat": lat, "lon": lon, "alt_m": 1500.0},
+            "velocity": {"vx_mps": 120.0, "vy_mps": 40.0, "vz_mps": 0.0},
+            "quality": {"confidence": 0.85},
+            "metadata": {"scenario": "benign"}
+        })
+
 
     elif scenario == "air":
-        # 3 air contacts, higher alt, one "fast closing" profile
-        for i in range(1, 4):
-            lat, lon = _random_offset_miles(center_lat, center_lon, max_miles=10.0)
-            closing_fast = (i == 1)
-            observations.append({
-                **base,
-                "observation_id": make_obs_id(),
-                "sensor_type": "EOIR" if i == 2 else "RADAR",
-                "object_id": make_id("AIR", i),
-                "contact_type": "AIR",
-                "label": f"AIRPLANE-{i:02d}",
-                "sensor_id": "EOIR-02" if i == 2 else "RADAR-01",
-                "modality": "EOIR" if i == 2 else "RADAR",
-                "position": {"lat": lat, "lon": lon, "alt_m": 12000.0 if closing_fast else 9000.0},
-                "velocity": {"vx_mps": 420.0 if closing_fast else 250.0, "vy_mps": 80.0, "vz_mps": 0.0},
-                "quality": {"confidence": 0.88},
-                "metadata": {"scenario": "airborne_fast_closing" if closing_fast else "air"}
-            })
+        lat, lon = _random_offset_miles(center_lat, center_lon, max_miles=10.0)
+        fast = random.random() < 0.6
+        observations.append({
+            **base,
+            "observation_id": make_obs_id(),
+            "sensor_type": "RADAR",
+            "object_id": make_id("AIR", 1),
+            "contact_type": "AIR",
+            "label": f"AIRPLANE-{random.randint(1, 99):02d}",
+            "sensor_id": "RADAR-01",
+            "modality": "RADAR",
+            "position": {"lat": lat, "lon": lon, "alt_m": 12000.0 if fast else 9000.0},
+            "velocity": {"vx_mps": 420.0 if fast else 240.0, "vy_mps": 80.0, "vz_mps": 0.0},
+            "quality": {"confidence": 0.88},
+            "metadata": {"scenario": "airborne_fast_closing" if fast else "air"}
+        })
+
 
     elif scenario == "sea":
-        # 3 sea contacts, surface alt, no AIS context implied by metadata
-        for i in range(1, 4):
-            lat, lon = _random_offset_miles(center_lat, center_lon, max_miles=12.0)
-            observations.append({
-                **base,
-                "observation_id": make_obs_id(),
-                "sensor_type": "AIS" if i == 3 else "RADAR",
-                "object_id": make_id("SEA", i),
-                "contact_type": "SEA",
-                "label": f"VESSEL-{i:02d}",
-                "sensor_id": "AIS-EDGE-01" if i == 3 else "RADAR-01",
-                "modality": "AIS" if i == 3 else "RADAR",
-                "position": {"lat": lat, "lon": lon, "alt_m": 0.0},
-                "velocity": {"vx_mps": 18.0, "vy_mps": 3.0, "vz_mps": 0.0},
-                "quality": {"confidence": 0.82},
-                "metadata": {"scenario": "sea_surface_no_ais"}
-            })
+        lat, lon = _random_offset_miles(center_lat, center_lon, max_miles=12.0)
+        observations.append({
+            **base,
+            "observation_id": make_obs_id(),
+            "sensor_type": "RADAR",
+            "object_id": make_id("SEA", 1),
+            "contact_type": "SEA",
+            "label": f"VESSEL-{random.randint(1, 99):02d}",
+            "sensor_id": "RADAR-01",
+            "modality": "RADAR",
+            "position": {"lat": lat, "lon": lon, "alt_m": 0.0},
+            "velocity": {"vx_mps": 18.0, "vy_mps": 3.0, "vz_mps": 0.0},
+            "quality": {"confidence": 0.82},
+            "metadata": {"scenario": "sea_surface_no_ais"}
+        })
+
 
     else:
         # default = benign-like single contact
@@ -237,6 +238,8 @@ def index(request: Request):
             "tracks": tracks,
             "threats": threats,
             "events": events,
+            "ref_lat": REF_LAT,
+            "ref_lon": REF_LON,
             "fusion_stats_pretty": _pretty(fusion_stats),
             "scoring_stats_pretty": _pretty(scoring_stats),
             "rationale_map": RATIONALE_MAP,
@@ -288,3 +291,19 @@ def clear_all():
     except Exception:
         pass
     return {"ok": True}
+
+@app.get("/api/panels")
+def api_panels():
+    tracks = _get_json(f"{TRACK_FUSION_URL}/tracks", [])
+    threats = _get_json(f"{THREAT_SCORING_URL}/threats", [])
+    fusion_stats = _get_json(f"{TRACK_FUSION_URL}/stats", {})
+    scoring_stats = _get_json(f"{THREAT_SCORING_URL}/stats", {})
+    events = _get_json(f"{AUDIT_URL}/events", [])
+    return JSONResponse({
+        "tracks": tracks,
+        "threats": threats,
+        "fusion_stats": fusion_stats,
+        "scoring_stats": scoring_stats,
+        "events": events[-10:],   # keep it light
+    })
+

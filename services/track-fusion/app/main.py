@@ -131,6 +131,7 @@ def ingest_observation(obs: Dict[str, Any], authorization: Optional[str] = Heade
 
         track = {
             "track_id": track_id,
+            "object_id": object_id,
             "last_update_utc": now,
             "state": {"lat": lat, "lon": lon, "alt_m": alt},
             "sources": [sensor_id],
@@ -163,7 +164,10 @@ def ingest_observation(obs: Dict[str, Any], authorization: Optional[str] = Heade
     else:
         track = TRACKS[match_track_id]
 
-        track["state"] = {"lat": lat, "lon": lon, "alt_m": alt}
+        # Only update position if this observation belongs to same object
+        if object_id and object_id == track.get("object_id"):
+            track["state"] = {"lat": lat, "lon": lon, "alt_m": alt}
+
         track["last_update_utc"] = now
 
         track["track_confidence"] = max(

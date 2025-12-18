@@ -244,15 +244,15 @@
         <div class="cards">
             <div class="card">
                 <div class="metric-label">Active Tracks</div>
-                <div class="metric-value">{{ active_tracks }}</div>
+                <div class="metric-value"><span id="activeTracksVal">{{ active_tracks }}</span></div>
             </div>
             <div class="card">
                 <div class="metric-label">Active Threats</div>
-                <div class="metric-value">{{ active_threats }}</div>
+                <div class="metric-value"><span id="activeThreatsVal">{{ active_threats }}</span></div>
             </div>
             <div class="card">
                 <div class="metric-label">Observations Ingested</div>
-                <div class="metric-value">{{ observations_ingested }}</div>
+                <div class="metric-value"><span id="observationsVal">{{ observations_ingested }}</span></div>
             </div>
         </div>
 
@@ -300,10 +300,10 @@
                     </div>
 
                     <div class="muted" style="margin-top:12px;">Fusion stats</div>
-                    <pre>{{ fusion_stats_pretty }}</pre>
+                    <pre id="fusionStatsPre">{{ fusion_stats_pretty }}</pre>
 
                     <div class="muted" style="margin-top:12px;">Scoring stats</div>
-                    <pre>{{ scoring_stats_pretty }}</pre>
+                    <pre id="scoringStatsPre">{{ scoring_stats_pretty }}</pre>
 
                     <div class="muted" style="margin-top:12px;">Latest events (top 5)</div>
                     <pre>
@@ -329,7 +329,7 @@
                         <th>Action</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="threatsTbody">
                     {% for t in threats %}
                     <tr>
                         <td>{{ t.threat_id }}</td>
@@ -372,11 +372,11 @@
                         <th>Lat</th>
                         <th>Lon</th>
                         <th>Alt (ft)</th>
-                        <th>Confidence</th>
+                        <!-- <th>Confidence</th> -->
                         <th class="hide-sm">Sources</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tracksTbody">
                     {% for trk in tracks %}
                     <tr>
                         <td>{{ trk.track_id }}</td>
@@ -385,7 +385,7 @@
                         <td>{{ trk.state.lat }}</td>
                         <td>{{ trk.state.lon }}</td>
                         <td>{{ (trk.state.alt_m * 3.28084) | round | int }}</td>
-                        <td>{{ "%.2f"|format(trk.track_confidence) }}</td>
+                        <!-- <td>{{ "%.2f"|format(trk.track_confidence) }}</td> -->
                         <td class="hide-sm">{{ ", ".join(trk.sources) }}</td>
                     </tr>
                     {% endfor %} {% if tracks|length == 0 %}
@@ -404,10 +404,133 @@
 
     <!-- <script id="tracks-json" type="application/json">{{ tracks | tojson }}</script>
     <script id="threats-json" type="application/json">{{ threats | tojson }}</script> -->
-
+    <script id="ref-json" type="application/json">
+        {
+            "lat": {
+                {
+                    ref_lat
+                }
+            },
+            "lon": {
+                {
+                    ref_lon
+                }
+            }
+        }
+    </script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Persistent radar reference (prevents plot shifting when new tracks arrive)
+            let radarRef = null; // { lat: number, lon: number, label: string }
+
+            async function refreshAll() {
+                const r = await fetch("/api/panels");
+                if (!r.ok) throw new Error("refresh failed: " + r.status);
+                const data = await r.json();
+
+                tracks = data.tracks || [];
+                threats = data.threats || [];
+
+                // Update top cards (make sure these spans exist in HTML)
+                const f = data.fusion_stats || {};
+                const s = data.scoring_stats || {};
+
+                const elTracks = document.getElementById("activeTracksVal");
+                const elThreats = document.getElementById("activeThreatsVal");
+                const elObs = document.getElementById("observationsVal");
+
+                function pickNumber(v, fallback) {
+                    return (v === undefined || v === null || Number.isNaN(v)) ? fallback : v;
+                }
+
+                if (elTracks) elTracks.textContent = String(pickNumber(f.active_tracks, tracks.length || 0));
+                if (elThreats) elThreats.textContent = String(pickNumber(s.active_threats, threats.length || 0));
+                if (elObs) elObs.textContent = String(pickNumber(f.observations_ingested, 0));
+
+
+                // Update tables (tbody IDs must exist)
+                renderTracksTable(tracks);
+                renderThreatsTable(threats);
+
+                // Update quick panels (optional)
+                const fusionPre = document.getElementById("fusionStatsPre");
+                const scoringPre = document.getElementById("scoringStatsPre");
+                if (fusionPre) fusionPre.textContent = JSON.stringify(f, null, 2);
+                if (scoringPre) scoringPre.textContent = JSON.stringify(s, null, 2);
+
+                drawRadar();
+            }
+
+            function renderTracksTable(list) {
+                const tbody = document.getElementById("tracksTbody");
+                if (!tbody) return;
+                tbody.innerHTML = "";
+
+                if (!list || list.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="8">No tracks present. Click a scenario to seed observations.</td></tr>`;
+                    return;
+                }
+
+                for (const t of list) {
+                    const st = t.state || {};
+                    const sources = (t.sources || []).join(", ");
+
+                    const altFt = (st.alt_m !== undefined && st.alt_m !== null) ?
+                        Math.round(st.alt_m * 3.28084) :
+                        "";
+                    const conf = (t.confidence !== undefined && t.track_confidence !== null) ?
+                        t.track_confidence.toFixed(2) :
+                        (st.track_confidence !== undefined && st.track_confidence !== null) ?
+                        Number(st.track_confidence).toFixed(2) :
+                        "";
+                    tbody.insertAdjacentHTML("beforeend", `
+                    <tr>
+                        <td>${t.track_id ?? ""}</td>
+                        <td>${t.label ?? ""}</td>
+                        <td>${t.last_update_utc ?? ""}</td>
+                        <td>${st.lat ?? ""}</td>
+                        <td>${st.lon ?? ""}</td>
+                        <td>${altFt}</td>
+                        <!-- <td>${conf}</td> -->
+                        <td>${sources}</td>
+                    </tr>
+                    `);
+                }
+            }
+
+
+            function renderThreatsTable(list) {
+                const tbody = document.getElementById("threatsTbody");
+                if (!tbody) return;
+                tbody.innerHTML = "";
+
+                if (!list || list.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7">No threats detected.</td></tr>`;
+                    return;
+                }
+
+                for (const thr of list) {
+                    const rationale = (thr.rationale && thr.rationale.length) ?
+                        ("• " + thr.rationale.join("<br>• ")) :
+                        "—";
+
+                    tbody.insertAdjacentHTML("beforeend", `
+                    <tr>
+                        <td>${thr.threat_id ?? ""}</td>
+                        <td>${thr.track_id ?? ""}</td>
+                        <td>${thr.label ?? ""}</td>
+                        <td>${thr.priority ?? ""}</td>
+                        <td>${thr.score ?? ""}</td>
+                        <td>${rationale}</td>
+                        <td>${thr.recommended_action ?? ""}</td>
+                    </tr>
+                    `);
+                }
+            }
+
+
+
             function getJson(id) {
                 try {
                     var el = document.getElementById(id);
@@ -506,13 +629,25 @@
                     if (statusEl) statusEl.textContent = "Plotting " + tracks.length + " track(s) / " + threats.length + " threat(s).";
                 }
 
-                // Reference = first track
-                var ref = tracks[0];
-                var refState = (ref && ref.state) ? ref.state : {};
-                var lat0 = (refState.lat !== undefined && refState.lat !== null) ? refState.lat : 0;
-                var lon0 = (refState.lon !== undefined && refState.lon !== null) ? refState.lon : 0;
+                // Reference: set once, keep stable across scenario loads
+                if (!radarRef) {
+                    const first = tracks[0] || {};
+                    const st0 = first.state || {};
+                    const lat0 = (st0.lat !== undefined && st0.lat !== null) ? st0.lat : 0;
+                    const lon0 = (st0.lon !== undefined && st0.lon !== null) ? st0.lon : 0;
+                    radarRef = {
+                        lat: lat0,
+                        lon: lon0,
+                        label: (first.label || first.contact_type || first.track_id || "REF")
+                    };
+                }
 
-                if (refEl) refEl.textContent = "Reference: " + (ref.track_id || "TRK") + " @ (" + lat0 + ", " + lon0 + ")";
+                const lat0 = radarRef.lat;
+                const lon0 = radarRef.lon;
+
+                if (refEl) refEl.textContent =
+                    "Reference: " + radarRef.label + " @ (" + lat0 + ", " + lon0 + ")";
+
 
                 var scale = radius / RANGE_KM;
 
@@ -528,6 +663,27 @@
                     var off = latLonToKmOffset(lat0, lon0, lat, lon);
                     var x = cx + off.x * scale;
                     var y = cy + off.y * scale;
+
+                    // Keep within radar circle (leave room for labels)
+                    var pad = 14; // label breathing room
+                    var dxp = x - cx;
+                    var dyp = y - cy;
+                    var dist = Math.sqrt(dxp * dxp + dyp * dyp);
+                    var maxDist = radius - pad;
+
+                    if (dist > maxDist) {
+                        // Option A: clamp to edge (keeps it visible)
+                        var k = maxDist / dist;
+                        x = cx + dxp * k;
+                        y = cy + dyp * k;
+
+                        // Optional: mark as out-of-range (tiny ring)
+                        ctx.strokeStyle = "rgba(229,231,235,0.7)";
+                        ctx.beginPath();
+                        ctx.arc(x, y, 7, 0, Math.PI * 2);
+                        ctx.stroke();
+                    }
+
 
                     // Determine priority from threats (match by track_id)
                     var priority = "LOW";
@@ -568,72 +724,104 @@
                 }
             }
 
-            async function runScenario(name) {
-                var ids = ["btnBenign", "btnAir", "btnSea", "btnRefresh"];
-                for (var i = 0; i < ids.length; i++) {
-                    var b = document.getElementById(ids[i]);
-                    if (b) b.disabled = true;
+            function setButtonsDisabled(disabled) {
+                const ids = ["btnBenign", "btnAir", "btnSea", "btnRefresh", "btnClear"];
+                for (const id of ids) {
+                    const el = document.getElementById(id);
+                    if (el) el.disabled = disabled;
                 }
+            }
+            async function runScenario(name) {
+                setButtonsDisabled(true);
 
                 try {
-                    // POST first
-                    var r = await fetch("/scenario/" + name, {
+                    const r = await fetch("/scenario/" + name, {
                         method: "POST"
                     });
                     if (!r.ok) {
                         // fallback to GET
-                        var r2 = await fetch("/scenario/" + name, {
+                        const r2 = await fetch("/scenario/" + name, {
                             method: "GET"
                         });
                         if (!r2.ok) throw new Error("Scenario failed: " + r.status + " / " + r2.status);
                     }
-                    window.location.reload();
+
+                    await refreshAll(); // <-- no page reload
                 } catch (e) {
                     console.error(e);
                     alert("Scenario failed. See console.\n\n" + e);
-                    for (var k = 0; k < ids.length; k++) {
-                        var bb = document.getElementById(ids[k]);
-                        if (bb) bb.disabled = false;
-                    }
+                } finally {
+                    // always re-enable buttons, success or fail
+                    setButtonsDisabled(false);
+                }
+
+                // var ids = ["btnBenign", "btnAir", "btnSea", "btnRefresh"];
+                // for (var i = 0; i < ids.length; i++) {
+                //     var b = document.getElementById(ids[i]);
+                //     if (b) b.disabled = true;
+                // }
+
+                // try {
+                //     // POST first
+                //     var r = await fetch("/scenario/" + name, {
+                //         method: "POST"
+                //     });
+                //     if (!r.ok) {
+                //         // fallback to GET
+                //         var r2 = await fetch("/scenario/" + name, {
+                //             method: "GET"
+                //         });
+                //         if (!r2.ok) throw new Error("Scenario failed: " + r.status + " / " + r2.status);
+                //     }
+                //     await refreshAll();
+                // } catch (e) {
+                //     console.error(e);
+                //     alert("Scenario failed. See console.\n\n" + e);
+                //     for (var k = 0; k < ids.length; k++) {
+                //         var bb = document.getElementById(ids[k]);
+                //         if (bb) bb.disabled = false;
+                //     }
+                // }
+            }
+
+            async function clearRadar() {
+                setButtonsDisabled(true);
+                try {
+                    const r = await fetch("/clear", {
+                        method: "POST"
+                    });
+                    if (!r.ok) throw new Error("Clear failed: " + r.status);
+                    radarRef = null; // keep your pinned reference reset
+                    await refreshAll();
+                } catch (e) {
+                    console.error(e);
+                    alert("Clear failed. See console.\n\n" + e);
+                } finally {
+                    setButtonsDisabled(false);
                 }
             }
 
             // Hook up buttons
-            var b1 = document.getElementById("btnBenign");
-            var b2 = document.getElementById("btnAir");
-            var b3 = document.getElementById("btnSea");
-            var br = document.getElementById("btnRefresh");
-            var bc = document.getElementById("btnClear");
+            const b1 = document.getElementById("btnBenign");
+            const b2 = document.getElementById("btnAir");
+            const b3 = document.getElementById("btnSea");
+            const br = document.getElementById("btnRefresh");
+            const bc = document.getElementById("btnClear");
 
-            if (b1) b1.addEventListener("click", function() {
-                runScenario("benign");
-            });
-            if (b2) b2.addEventListener("click", function() {
-                runScenario("air");
-            });
-            if (b3) b3.addEventListener("click", function() {
-                runScenario("sea");
-            });
-            if (br) br.addEventListener("click", function() {
-                window.location.reload();
-            });
-            if (bc) bc.addEventListener("click", async function() {
-                if (!confirm("Clear all tracks/threats/events?")) return;
+            if (b1) b1.addEventListener("click", () => runScenario("benign"));
+            if (b2) b2.addEventListener("click", () => runScenario("air"));
+            if (b3) b3.addEventListener("click", () => runScenario("sea"));
+
+            if (br) br.addEventListener("click", async() => {
+                setButtonsDisabled(true);
                 try {
-                    await fetch("/clear", {
-                        method: "POST"
-                    });
-                } catch (e) {
-                    console.error(e);
-                    alert("Clear failed. See console.");
+                    await refreshAll();
+                } finally {
+                    setButtonsDisabled(false);
                 }
-                window.location.reload();
             });
 
-
-            loadSnapshot().then(function() {
-                drawRadar();
-            });
+            if (bc) bc.addEventListener("click", () => clearRadar());
 
         });
     </script>
