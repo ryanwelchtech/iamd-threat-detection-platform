@@ -1,42 +1,57 @@
-# Demo Script (5–8 minutes)
+# Demo Script (Local and Hosted)
 
-This script is designed for recruiter or interview demos.
-
----
-
-## 1. Context (1 minute)
-
-- Explain the goal: **threat detection and decision support**
-- Emphasize: simulation, portfolio-safe, human-in-the-loop
+This script can be used live during interviews or demos.
 
 ---
 
-## 2. Architecture Walkthrough (2 minutes)
+## Step 1: Open the COP
 
-- Show `docs/ARCHITECTURE.md`
-- Call out service boundaries and trust zones
+Local:
+http://localhost:8080
+
+Hosted:
+http://<EC2_PUBLIC_IP>:8080
 
 ---
 
-## 3. Live Demo (3 minutes)
+## Step 2: Explain the Radar
 
-```bash
-docker compose up --build
-``` 
+- Concentric rings show distance (miles)
+- Objects persist across scenario loads
+- Labels indicate contact type and altitude
 
-```powershell
-.\scripts\seed-data.ps1
-``` 
+---
 
-- Open COP: http://localhost:8080
-- Show tracks appearing
-- Highlight threat score + rationale
+## Step 3: Load Scenarios
 
-4. Traceability (1 minute)
-- Open audit events:
-http://localhost:8004/events
-- Show how decisions are logged
+Click buttons in this order:
+1. Load Benign
+2. Load Air
+3. Load Sea
 
-5. Close (1 minute)
-- Explain how this maps to real mission systems
-- Mention extensions: metrics, SAST, SBOMs, admission control
+Explain:
+- Unique object IDs per click
+- Persistent coordinates
+- Multiple tracks coexist
+
+---
+
+## Step 4: Threat Interpretation
+
+Show:
+- Priority levels
+- Scores
+- Explainable rationale
+
+Emphasize:
+- No automation of lethal actions
+- Recommendations only
+
+---
+
+## Step 5: Clear and Recover
+
+Click Clear Radar:
+- All services reset
+- Dashboard updates without refresh
+- Demonstrates resilience

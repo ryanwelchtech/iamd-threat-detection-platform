@@ -1,65 +1,61 @@
 # System Architecture
 
-This project models a simplified **Integrated Air & Missile Defense (IAMD)** threat detection pipeline using loosely coupled microservices.
+The IAMD Threat Detection Platform is a distributed, event-driven microservice
+architecture designed to simulate real-world defense mission systems.
 
-The goal is to demonstrate **systems engineering thinking**:
-- Clear service boundaries
-- Defined interfaces
-- Failure-tolerant behavior
+---
+
+## Core Design Principles
+
+- Zero Trust by default
+- Stateless services
+- Deterministic identity
 - Human-in-the-loop decision support
+- Auditability over automation
 
 ---
 
-## High-Level Data Flow
+## Service Architecture
 
-1. **sensor-ingest**
-   - Accepts simulated RADAR, EO/IR, and AIS observations
-   - Validates schema and enforces authentication
-   - Emits normalized observations
+sensor-ingest
+- Entry point for all sensor observations
+- JWT validation and schema enforcement
+- Forwards normalized observations downstream
 
-2. **track-fusion**
-   - Correlates observations into object tracks
-   - Maintains track confidence and source attribution
-   - Handles sensor dropouts gracefully
+track-fusion
+- Correlates observations into tracks
+- Maintains position, altitude, confidence, and sources
+- Emits track updates on every observation
 
-3. **threat-scoring**
-   - Evaluates tracks against policy-driven rules
-   - Produces threat priority, score, and rationale
-   - Designed for explainability, not autonomy
+threat-scoring
+- Applies rule-based scoring to tracks
+- Produces priority, score, rationale, and action
+- One threat per track (upsert model)
 
-4. **cop-dashboard**
-   - Displays tracks and threats to an operator
-   - Enables human-in-the-loop assessment
+cop-dashboard
+- Human-facing COP interface
+- Live radar visualization
+- Scenario injection for demo purposes
 
-5. **audit-log**
-   - Stores append-only events
-   - Enables traceability and after-action review
+audit-log
+- Append-only event store
+- Records all system actions
+- Supports traceability and recovery validation
 
 ---
 
-## Logical Architecture Diagram
+## Data Flow
 
-```text
-[Sensors]
-   |
-   v
-[sensor-ingest]
-   |
-   v
-[track-fusion]
-   |
-   +--> [cop-dashboard]
-   |
-   v
-[threat-scoring]
-   |
-   +--> [cop-dashboard]
+1. Observation ingested
+2. Track created or updated
+3. Threat scored
+4. Events logged
+5. COP updated in real-time
 
-(All services emit events to audit-log)
-```
+---
 
-## Design Principles
-- Zero Trust by default: all write operations require authentication
-- Loose coupling: services communicate via explicit APIs
-- Explainability over automation: system recommends, humans decide
-- Auditability: every major action generates an audit event
+## Trust Boundaries
+
+- External input: sensor-ingest
+- Internal services: authenticated via JWT
+- UI: read-only access to system state
