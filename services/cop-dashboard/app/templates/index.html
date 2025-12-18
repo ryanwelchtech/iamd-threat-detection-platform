@@ -229,6 +229,125 @@
                 display: none;
             }
         }
+        /* ---------------------------
+        Responsive Layout (Mobile-first)
+        ---------------------------- */
+        /* Constrain page width nicely on large screens */
+        
+        .container {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+        /* Cards stack behavior */
+        
+        .grid-top {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+        }
+        
+        .radar-row {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 16px;
+            align-items: start;
+        }
+        /* Make buttons wrap nicely */
+        
+        .quick-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        /* Tables: avoid cut-off on small screens */
+        
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 820px;
+            /* keeps columns readable; scroll on mobile */
+        }
+        /* Radar canvas: responsive */
+        
+        .radar-canvas {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        /* Make pre/json panels wrap */
+        
+        pre,
+        code {
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        /* Improve touch targets on mobile */
+        
+        button,
+        .btn {
+            min-height: 40px;
+            padding: 10px 14px;
+            font-size: 14px;
+        }
+        /* ---------------------------------
+        Breakpoints
+        ---------------------------------- */
+        /* Tablet */
+        
+        @media (max-width: 1024px) {
+            .grid-top {
+                grid-template-columns: 1fr;
+            }
+            .radar-row {
+                grid-template-columns: 1fr;
+            }
+            table {
+                min-width: 760px;
+            }
+        }
+        /* Phone */
+        
+        @media (max-width: 640px) {
+            body {
+                font-size: 14px;
+            }
+            .container {
+                width: calc(100% - 20px);
+            }
+            .grid-top {
+                gap: 12px;
+            }
+            .radar-row {
+                gap: 12px;
+            }
+            h1,
+            .title {
+                font-size: 18px;
+                line-height: 1.2;
+            }
+            .subheader {
+                font-size: 12px;
+            }
+            /* Reduce padding inside cards */
+            .card {
+                padding: 12px;
+            }
+            /* Make the radar area taller on phones */
+            .radar-shell {
+                min-height: 340px;
+            }
+            /* Tables scroll; keep headers readable */
+            table {
+                min-width: 720px;
+            }
+        }
     </style>
 </head>
 
@@ -271,7 +390,7 @@
                         </div>
                     </div>
 
-                    <canvas id="radarCanvas" width="480" height="480"></canvas>
+                    <canvas id="radarCanvas" width="520" height="520" class="radar-canvas"></canvas>
 
                     <div class="muted" style="font-size:12px; margin-top:10px;">
                         <span id="radarStatus"></span>
@@ -324,7 +443,7 @@
 
         <div class="section">
             <h2>Threats</h2>
-            <table>
+            <table class="table-wrap">
                 <thead>
                     <tr>
                         <th>Threat ID</th>
@@ -370,7 +489,7 @@
 
         <div class="section">
             <h2>Tracks</h2>
-            <table>
+            <table class="table-wrap">
                 <thead>
                     <tr>
                         <th>Track ID</th>
