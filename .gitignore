@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# Environment / secrets
+.env
+.env.*
+*.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node / frontend (future-proofing)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+*.log
+
+# Docker
+docker-compose.override.yml

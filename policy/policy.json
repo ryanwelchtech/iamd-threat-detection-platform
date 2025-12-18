@@ -1,0 +1,27 @@
+{
+    "policy_name": "iamd-release-gates",
+    "version": "1.0",
+    "description": "Release gate policy for the IAMD Threat Detection Platform. Critical and High findings block release; Medium and Low are tracked for remediation backlog.",
+
+    "gates": {
+        "maxCritical": 0,
+        "maxHigh": 0
+    },
+
+    "tracking": {
+        "allowMedium": true,
+        "allowLow": true,
+        "requireBacklogEntry": true
+    },
+
+    "enforcement": {
+        "onViolation": "fail_pipeline",
+        "onPass": "allow_release"
+    },
+
+    "notes": [
+        "Policy is portfolio-safe and demonstrative.",
+        "Designed to model real mission software release discipline.",
+        "Can be extended to enforce SBOMs, image signing, and admission control."
+    ]
+}

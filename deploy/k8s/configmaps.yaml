@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: iamd-config
+  namespace: iamd-demo
+data:
+  AUDIT_URL: "http://audit-log:8004"
+  TRACK_FUSION_URL: "http://track-fusion:8002"
+  THREAT_URL: "http://threat-scoring:8003"
+  THREAT_SCORING_URL: "http://threat-scoring:8003"

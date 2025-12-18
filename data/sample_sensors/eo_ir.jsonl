@@ -1,0 +1,2 @@
+{"observation_id":"eoir-0001","sensor_type":"EOIR","sensor_id":"EOIR-02","ts_utc":"2025-01-01T12:00:02Z","position":{"lat":29.7608,"lon":-95.3692,"alt_m":12010},"velocity":{"vx_mps":255,"vy_mps":-9,"vz_mps":0},"signature":{"rcs":0.7,"ir":0.35},"quality":{"snr_db":15.1,"confidence":0.80}}
+{"observation_id":"eoir-0002","sensor_type":"EOIR","sensor_id":"EOIR-02","ts_utc":"2025-01-01T12:00:07Z","position":{"lat":29.7615,"lon":-95.3683,"alt_m":11970},"velocity":{"vx_mps":270,"vy_mps":-11,"vz_mps":0},"signature":{"rcs":0.68,"ir":0.38},"quality":{"snr_db":14.6,"confidence":0.78}}

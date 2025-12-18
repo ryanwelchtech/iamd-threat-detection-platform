@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audit-log
+  namespace: iamd-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: audit-log
+  template:
+    metadata:
+      labels:
+        app: audit-log
+    spec:
+      containers:
+        - name: audit-log
+          image: audit-log:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8004
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8004
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: audit-log
+  namespace: iamd-demo
+spec:
+  selector:
+    app: audit-log
+  ports:
+    - name: http
+      port: 8004
+      targetPort: 8004

@@ -1,0 +1,15 @@
+[project]
+name = "iamd-common"
+version = "0.1.0"
+description = "Shared models and utilities for the IAMD Threat Detection Platform"
+requires-python = ">=3.11"
+
+dependencies = [
+  "pydantic>=2.8.0",
+  "pyjwt>=2.9.0",
+  "requests>=2.32.0"
+]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"

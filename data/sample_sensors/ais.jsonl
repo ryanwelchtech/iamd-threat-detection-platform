@@ -1,0 +1,2 @@
+{"observation_id":"ais-0001","sensor_type":"AIS","sensor_id":"AIS-EDGE-01","ts_utc":"2025-01-01T12:00:01Z","position":{"lat":29.7500,"lon":-95.4000,"alt_m":0},"velocity":{"vx_mps":6,"vy_mps":1,"vz_mps":0},"signature":{"rcs":0.0,"ir":0.0},"quality":{"snr_db":0.0,"confidence":0.99}}
+{"observation_id":"ais-0002","sensor_type":"AIS","sensor_id":"AIS-EDGE-01","ts_utc":"2025-01-01T12:00:06Z","position":{"lat":29.7512,"lon":-95.3987,"alt_m":0},"velocity":{"vx_mps":6.2,"vy_mps":1.1,"vz_mps":0},"signature":{"rcs":0.0,"ir":0.0},"quality":{"snr_db":0.0,"confidence":0.99}}

@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cop-dashboard
+  namespace: iamd-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cop-dashboard
+  template:
+    metadata:
+      labels:
+        app: cop-dashboard
+    spec:
+      containers:
+        - name: cop-dashboard
+          image: cop-dashboard:local
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: iamd-config
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cop-dashboard
+  namespace: iamd-demo
+spec:
+  selector:
+    app: cop-dashboard
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

@@ -1,0 +1,60 @@
+services:
+  audit-log:
+    build:
+      context: .
+      dockerfile: services/audit-log/Dockerfile
+    ports:
+      - "8004:8004"
+
+  threat-scoring:
+    build:
+      context: .
+      dockerfile: services/threat-scoring/Dockerfile
+    environment:
+      JWT_SECRET: dev_super_secret_change_me
+      RULES_PATH: app/rules.yaml
+    depends_on:
+      - audit-log
+    ports:
+      - "8003:8003"
+
+  track-fusion:
+    build:
+      context: .
+      dockerfile: services/track-fusion/Dockerfile
+    environment:
+      JWT_SECRET: dev_super_secret_change_me
+      THREAT_URL: http://threat-scoring:8003
+      AUDIT_URL: http://audit-log:8004
+    depends_on:
+      - threat-scoring
+      - audit-log
+    ports:
+      - "8002:8002"
+
+  sensor-ingest:
+    build:
+      context: .
+      dockerfile: services/sensor-ingest/Dockerfile
+    environment:
+      JWT_SECRET: dev_super_secret_change_me
+      TRACK_FUSION_URL: http://track-fusion:8002
+      AUDIT_URL: http://audit-log:8004
+    depends_on:
+      - track-fusion
+      - audit-log
+    ports:
+      - "8001:8001"
+
+  cop-dashboard:
+    build:
+      context: .
+      dockerfile: services/cop-dashboard/Dockerfile
+    environment:
+      TRACK_FUSION_URL: http://track-fusion:8002
+      THREAT_SCORING_URL: http://threat-scoring:8003
+    depends_on:
+      - track-fusion
+      - threat-scoring
+    ports:
+      - "8080:8080"
