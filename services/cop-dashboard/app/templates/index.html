@@ -305,12 +305,19 @@
                     <div class="muted" style="margin-top:12px;">Scoring stats</div>
                     <pre id="scoringStatsPre">{{ scoring_stats_pretty }}</pre>
 
-                    <div class="muted" style="margin-top:12px;">Latest events (top 5)</div>
+                    <!-- <div class="muted" style="margin-top:12px;">Latest events (top 5)</div>
                     <pre>
-{% for e in events[:5] %}
-{{ e.ts_utc }} {{ e.source_service }} {{ e.action }}
-{% endfor %}
-          </pre>
+                        {% if events and events|length > 0 %}
+                        {% for e in events[:5] %}
+                            <div class="event-row">
+                            {{ e.ts_utc }} · {{ e.source_service }} · {{ e.action }}
+                            </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="event-empty">No recent events</div>
+                        {% endif %}
+
+                    </pre> -->
                 </div>
             </div>
         </div>
