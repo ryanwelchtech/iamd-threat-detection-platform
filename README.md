@@ -74,6 +74,8 @@ Generate a dev token:
 
 -Local demo uses HS256 with JWT_SECRET (shared secret).
 -In a real environment, use a managed secret store + rotation, mTLS, signed images, and policy enforcement.
+- This hosted demo operates with a shared in-memory state across users to simplify public access and ensure stability.
+- In a production environment, track, threat, and audit state would be scoped per mission, per operator, or per security domain using session identifiers, tenant isolation, or backing data stores (e.g., Redis or Postgres).
 
 ---
 
