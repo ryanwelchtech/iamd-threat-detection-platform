@@ -290,6 +290,48 @@
             min-width: 820px;
             /* keeps columns readable; scroll on mobile */
         }
+        /* Prevent tables from expanding the layout when long strings appear */
+        
+        .table-wrap {
+            width: 100%;
+            overflow-x: auto;
+            /* allow scroll if absolutely needed */
+            -webkit-overflow-scrolling: touch;
+        }
+        /* Critical: do NOT let the table compute a wider width because of long strings */
+        
+        .table-wrap table {
+            width: 100%;
+            max-width: 100%;
+            table-layout: fixed;
+            /* forces columns to fit container */
+        }
+        /* Allow cells to shrink and wrap instead of expanding the page */
+        
+        .table-wrap th,
+        .table-wrap td {
+            max-width: 0;
+            /* allows ellipsis behavior in fixed table layout */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            /* default: keep rows compact */
+        }
+        /* But for “rationale” / multi-line text, wrap instead of ellipsis */
+        
+        .table-wrap td.rationale-cell {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            line-height: 1.25;
+        }
+        /* Also wrap long IDs if you prefer readability over ellipsis */
+        
+        .table-wrap td.wrap-cell {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
         /* Radar canvas: responsive */
         
         .radar-canvas {
@@ -522,14 +564,14 @@
                     <tbody id="threatsTbody">
                         {% for t in threats %}
                         <tr>
-                            <td>{{ t.threat_id }}</td>
-                            <td>{{ t.track_id }}</td>
-                            <td>{{ t.get("label", "") }}</td>
-                            <td>
+                            <td class="wrap-cell">{{ t.threat_id }}</td>
+                            <td class="wrap-cell">{{ t.track_id }}</td>
+                            <td class="wrap-cell">{{ t.get("label", "") }}</td>
+                            <td class="wrap-cell">
                                 {% set p = (t.priority or "LOW")|lower %}
                                 <span class="pill {{ p }}">{{ t.priority }}</span>
                             </td>
-                            <td>{{ "%.2f"|format(t.score) }}</td>
+                            <td class="wrap-cell">{{ "%.2f"|format(t.score) }}</td>
                             <td class="hide-sm">
                                 {% if t.rationale %}
                                 <ul style="margin:0; padding-left: 16px;">
@@ -540,7 +582,7 @@
                                 {% else %}
                                 <span class="muted">—</span> {% endif %}
                             </td>
-                            <td><span class="pill">{{ t.recommended_action }}</span></td>
+                            <td class="wrap-cell"><span class="pill">{{ t.recommended_action }}</span></td>
                         </tr>
                         {% endfor %} {% if threats|length == 0 %}
                         <tr>
@@ -569,12 +611,12 @@
                     <tbody id="tracksTbody">
                         {% for trk in tracks %}
                         <tr>
-                            <td>{{ trk.track_id }}</td>
-                            <td>{{ trk.get("label", "") }}</td>
-                            <td>{{ trk.last_update_utc }}</td>
-                            <td>{{ trk.state.lat }}</td>
-                            <td>{{ trk.state.lon }}</td>
-                            <td>{{ (trk.state.alt_m * 3.28084) | round | int }}</td>
+                            <td class="wrap-cell">{{ trk.track_id }}</td>
+                            <td class="wrap-cell">{{ trk.get("label", "") }}</td>
+                            <td class="wrap-cell">{{ trk.last_update_utc }}</td>
+                            <td class="wrap-cell">{{ trk.state.lat }}</td>
+                            <td class="wrap-cell">{{ trk.state.lon }}</td>
+                            <td class="wrap-cell">{{ (trk.state.alt_m * 3.28084) | round | int }}</td>
                             <!-- <td>{{ "%.2f"|format(trk.track_confidence) }}</td> -->
                             <td class="hide-sm">{{ ", ".join(trk.sources) }}</td>
                         </tr>
