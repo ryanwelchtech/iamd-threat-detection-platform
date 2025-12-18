@@ -453,6 +453,59 @@
                 min-width: 640px;
             }
         }
+        /* Tables must NEVER expand the page width */
+        
+        .table-wrap {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table-wrap table {
+            width: 100%;
+            max-width: 100%;
+            border-collapse: collapse;
+            table-layout: auto;
+            /* let browser size columns naturally */
+        }
+        /* Make headers readable on mobile */
+        
+        .table-wrap th {
+            white-space: nowrap;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        /* Default: compact cells (don’t force wrapping everywhere) */
+        
+        .table-wrap td {
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        /* Wrap ONLY rationale so it doesn't force width */
+        
+        .table-wrap td.rationale-cell {
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+            line-height: 1.25;
+            max-width: 220px;
+            /* prevents rationale from making the table huge */
+        }
+        /* Keep long IDs from blowing up the layout */
+        
+        .table-wrap td.id-cell {
+            max-width: 92px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* Sources column can be long; keep it safe */
+        
+        .table-wrap td.sources-cell {
+            max-width: 110px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 </head>
 
@@ -547,9 +600,9 @@
                 </div>
             </div>
 
-            <div class="section">
+            <div class="table-wrap">
                 <h2>Threats</h2>
-                <table class="table-wrap">
+                <table class="table">
                     <thead>
                         <tr>
                             <th>Threat ID</th>
@@ -561,41 +614,39 @@
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody id="threatsTbody">
-                        {% for t in threats %}
+                    <tbody>
+                        {% if threats and threats|length > 0 %} {% for t in threats %}
                         <tr>
-                            <td class="wrap-cell">{{ t.threat_id }}</td>
-                            <td class="wrap-cell">{{ t.track_id }}</td>
-                            <td class="wrap-cell">{{ t.get("label", "") }}</td>
-                            <td class="wrap-cell">
-                                {% set p = (t.priority or "LOW")|lower %}
-                                <span class="pill {{ p }}">{{ t.priority }}</span>
-                            </td>
-                            <td class="wrap-cell">{{ "%.2f"|format(t.score) }}</td>
-                            <td class="hide-sm" class="rationale-cell">
-                                {% if t.rationale %}
+                            <td class="id-cell">{{ t.get("threat_id","") }}</td>
+                            <td class="id-cell">{{ t.get("track_id","") }}</td>
+                            <td>{{ t.get("label","") }}</td>
+                            <td>{{ t.get("priority","") }}</td>
+                            <td>{{ "%.2f"|format(t.get("score",0.0)) }}</td>
+
+                            <td class="rationale-cell">
+                                {% set rs = t.get("rationale", []) %} {% if rs and rs|length > 0 %}
                                 <ul style="margin:0; padding-left: 16px;">
-                                    {% for r in t.rationale %}
-                                    <li>{{ rationale_map.get(r, r) }}</li>
+                                    {% for r in rs %}
+                                    <li>{{ r }}</li>
                                     {% endfor %}
                                 </ul>
-                                {% else %}
-                                <span class="muted">—</span> {% endif %}
+                                {% else %} — {% endif %}
                             </td>
-                            <td class="wrap-cell"><span class="pill">{{ t.recommended_action }}</span></td>
+
+                            <td>{{ t.get("recommended_action","") }}</td>
                         </tr>
-                        {% endfor %} {% if threats|length == 0 %}
+                        {% endfor %} {% else %}
                         <tr>
-                            <td colspan="6" class="muted">No threats detected.</td>
+                            <td colspan="7">No threats detected.</td>
                         </tr>
                         {% endif %}
                     </tbody>
                 </table>
             </div>
 
-            <div class="section">
+            <div class="table-wrap">
                 <h2>Tracks</h2>
-                <table class="table-wrap">
+                <table class="table">
                     <thead>
                         <tr>
                             <th>Track ID</th>
@@ -604,25 +655,25 @@
                             <th>Lat</th>
                             <th>Lon</th>
                             <th>Alt (ft)</th>
-
+                            <th>Confidence</th>
                             <th>Sources</th>
                         </tr>
                     </thead>
-                    <tbody id="tracksTbody">
-                        {% for trk in tracks %}
+                    <tbody>
+                        {% if tracks and tracks|length > 0 %} {% for trk in tracks %} {% set st = trk.get("state", {}) %}
                         <tr>
-                            <td class="wrap-cell">{{ trk.track_id }}</td>
-                            <td class="wrap-cell">{{ trk.get("label", "") }}</td>
-                            <td class="wrap-cell">{{ trk.last_update_utc }}</td>
-                            <td class="wrap-cell">{{ trk.state.lat }}</td>
-                            <td class="wrap-cell">{{ trk.state.lon }}</td>
-                            <td class="wrap-cell">{{ (trk.state.alt_m * 3.28084) | round | int }}</td>
-                            <!-- <td>{{ "%.2f"|format(trk.track_confidence) }}</td> -->
-                            <td class="hide-sm">{{ ", ".join(trk.sources) }}</td>
+                            <td class="id-cell">{{ trk.get("track_id","") }}</td>
+                            <td>{{ trk.get("label","") }}</td>
+                            <td>{{ trk.get("last_update_utc","") }}</td>
+                            <td>{{ st.get("lat","") }}</td>
+                            <td>{{ st.get("lon","") }}</td>
+                            <td>{{ trk.get("alt_ft", "") }}</td>
+                            <td>{{ trk.get("confidence","") }}</td>
+                            <td class="sources-cell">{{ (trk.get("sources", []) | join(", ")) }}</td>
                         </tr>
-                        {% endfor %} {% if tracks|length == 0 %}
+                        {% endfor %} {% else %}
                         <tr>
-                            <td colspan="7" class="muted">No tracks present. Click a scenario to seed observations.</td>
+                            <td colspan="8">No tracks present. Click a scenario to seed observations.</td>
                         </tr>
                         {% endif %}
                     </tbody>
