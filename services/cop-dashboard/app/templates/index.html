@@ -554,8 +554,10 @@
         
         .table-wrap td.sources-cell {
             white-space: nowrap !important;
-            overflow: hidden;
+            overflow: visible;
+            word-break: break-word;
             text-overflow: ellipsis;
+            overflow-wrap: anywhere;
         }
         /* If your Rationale/Sources columns use .hide-sm, keep them visible */
         
@@ -681,7 +683,7 @@
                             <td>{{ t.get("priority","") }}</td>
                             <td>{{ "%.2f"|format(t.get("score",0.0)) }}</td>
 
-                            <td class="rationale-cell">
+                            <td>
                                 {% set rs = t.get("rationale", []) %} {% if rs and rs|length > 0 %}
                                 <ul style="margin:0; padding-left: 16px;">
                                     {% for r in rs %}
@@ -727,7 +729,7 @@
                             <td>{{ st.get("lon","") }}</td>
                             <td>{{ trk.get("alt_ft", "") }}</td>
                             <td>{{ trk.get("confidence","") }}</td>
-                            <td class="sources-cell">{{ (trk.get("sources", []) | join(", ")) }}</td>
+                            <td>{{ (trk.get("sources", []) | join(", ")) }}</td>
                         </tr>
                         {% endfor %} {% else %}
                         <tr>
