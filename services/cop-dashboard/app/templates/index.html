@@ -572,7 +572,7 @@
                                 <span class="pill {{ p }}">{{ t.priority }}</span>
                             </td>
                             <td class="wrap-cell">{{ "%.2f"|format(t.score) }}</td>
-                            <td class="hide-sm">
+                            <td class="hide-sm" class="rationale-cell">
                                 {% if t.rationale %}
                                 <ul style="margin:0; padding-left: 16px;">
                                     {% for r in t.rationale %}
