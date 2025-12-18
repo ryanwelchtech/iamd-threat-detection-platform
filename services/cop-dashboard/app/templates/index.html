@@ -238,14 +238,6 @@
                 grid-template-columns: 1fr;
             }
         }
-        
-        .hide-sm {}
-        
-        @media (max-width: 900px) {
-            .hide-sm {
-                display: none;
-            }
-        }
         /* ---------------------------
         Responsive Layout (Mobile-first)
         ---------------------------- */
@@ -505,6 +497,72 @@
             max-width: 110px;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        /* --- MOBILE TABLE FIX OVERRIDES (paste at bottom) --- */
+        /* Keep background from showing white gaps on iOS */
+        
+        html,
+        body {
+            height: 100%;
+            background: #030712 !important;
+        }
+        
+        body {
+            min-height: 100vh;
+        }
+        /* Make table containers never push layout wider than cards */
+        
+        .table-wrap {
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        /* Force predictable sizing so new content doesn't re-expand the page */
+        
+        .table-wrap table {
+            width: 100%;
+            max-width: 100%;
+            table-layout: fixed;
+            /* KEY: stops content from changing table width */
+            min-width: 0;
+            /* KEY: prevents “minimum intrinsic width” blowouts */
+        }
+        /* Keep headers visible and stable */
+        
+        .table-wrap thead th {
+            white-space: nowrap;
+        }
+        /* Default cells: don’t expand layout */
+        
+        .table-wrap td,
+        .table-wrap th {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        /* Allow rationale to wrap (so it doesn't force width) */
+        
+        .table-wrap td.rationale-cell {
+            white-space: normal !important;
+            overflow: visible;
+            text-overflow: clip;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+        }
+        /* Sources can also be long—truncate safely */
+        
+        .table-wrap td.sources-cell {
+            white-space: nowrap !important;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* If your Rationale/Sources columns use .hide-sm, keep them visible */
+        
+        @media (max-width: 900px) {
+            .hide-sm {
+                display: table-cell !important;
+            }
         }
     </style>
 </head>
